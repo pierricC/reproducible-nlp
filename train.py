@@ -8,6 +8,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 
 from src.config import config as cfg
+from src.features.labelencoder import label_encoder
+from src.features.sampler import sample_df
 
 if __name__ == "__main__":
 
@@ -15,12 +17,12 @@ if __name__ == "__main__":
     df = pd.read_csv(cfg.DATA_PATH)
 
     # Label encode the target
-    df.sentiment = df.sentiment.apply(lambda x: 1 if x == "Positive" else 0)
+    df = label_encoder(
+        df, column_to_encode="sentiment", positive_value="Positive"
+    )
 
     # We only take a fraction of the data to speed up training time.
-    df = df.sample(
-        frac=cfg.FRACTION_SAMPLE, random_state=cfg.SEED
-    ).reset_index(drop=True)
+    df = sample_df(df, fraction=cfg.FRACTION_SAMPLE, random_state=cfg.SEED)
 
     # Target
     y = df.sentiment.values
