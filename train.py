@@ -1,15 +1,12 @@
-"""Script that train a classifier on the movie review dataset."""
+"""Script that train a classifier on the movie["review"] dataset."""
 
 import nltk
 import pandas as pd
-from nltk.tokenize import word_tokenize
-from sklearn import linear_model, metrics, model_selection
-from sklearn.feature_extraction.text import CountVectorizer
-from tqdm import tqdm
 
 from src.config import config as cfg
 from src.features.labelencoder import label_encoder
 from src.features.sampler import sample_df
+from src.modeling.trainer import run_model
 
 if __name__ == "__main__":
 
@@ -18,44 +15,23 @@ if __name__ == "__main__":
 
     # Label encode the target
     df = label_encoder(
-        df, column_to_encode="sentiment", positive_value="Positive"
+        df, column_to_encode=cfg.TARGET, positive_value=cfg.POSITIVE_VALUE
     )
 
     # We only take a fraction of the data to speed up training time.
     df = sample_df(df, fraction=cfg.FRACTION_SAMPLE, random_state=cfg.SEED)
 
+    X = df[cfg.TEXT_FEATURE]
     # Target
-    y = df.sentiment.values
+    y = df[cfg.TARGET]
 
     # Install the nlkt punkt package on the machine if not there already.
     nltk.download("punkt")
 
-    # Cross-validation using a simple logistic regression clf.
-    df["kfold"] = -1
-    kf = model_selection.StratifiedKFold(n_splits=cfg.NB_SPLIT)
+    train_kpis, valid_kpis = run_model(
+        X, y, params=cfg.PARAMS, n_splits=cfg.NB_SPLIT, random_state=cfg.SEED
+    )
 
-    for fold, (t, v) in tqdm(enumerate(kf.split(X=df, y=y))):
-        df.loc[v, "kfold"] = fold
+    print(train_kpis)
 
-    for fold in tqdm(range(cfg.NB_SPLIT)):
-        train_df = df[df.kfold != fold].reset_index(drop=True)
-        test_df = df[df.kfold == fold].reset_index(drop=True)
-
-        count_vec = CountVectorizer(
-            tokenizer=word_tokenize, token_pattern=None
-        )
-
-        count_vec.fit(train_df.review)
-
-        x_train = count_vec.transform(train_df.review)
-        x_test = count_vec.transform(test_df.review)
-
-        clf = linear_model.LogisticRegression()
-
-        clf.fit(x_train, train_df.sentiment)
-
-        predictions = clf.predict(x_test)
-
-        accuracy = metrics.accuracy_score(test_df.sentiment, predictions)
-
-        print(f"Fold: {fold}, accurary: {accuracy}\n")
+    print(valid_kpis)
