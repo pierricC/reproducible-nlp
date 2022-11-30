@@ -6,7 +6,7 @@ import pandas as pd
 from src.config import config as cfg
 from src.features.labelencoder import label_encoder
 from src.features.sampler import sample_df
-from src.modeling.trainer import run_model
+from src.modeling.trainer import run_model_cv
 
 if __name__ == "__main__":
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Install the nlkt punkt package on the machine if not there already.
     nltk.download("punkt")
 
-    train_kpis, valid_kpis = run_model(
+    train_kpis, valid_kpis = run_model_cv(
         X, y, params=cfg.PARAMS, n_splits=cfg.NB_SPLIT, random_state=cfg.SEED
     )
 
