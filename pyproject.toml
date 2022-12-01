@@ -24,6 +24,11 @@ pydantic = "*"
 pre-commit = "*"
 ipykernel = "^6.17.1"
 
+[tool.poetry.group.ci.dependencies]
+pytest = "^6.0.0"
+flake8 = "*"
+flake8-comprehensions = "*"
+black = "*"
 
 [build-system]
 requires = ["poetry-core"]
