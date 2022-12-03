@@ -1,0 +1,54 @@
+name: Training report
+
+on: [push]
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.8"
+
+    - name: Bootstrap poetry
+      run: |
+        curl -sL https://install.python-poetry.org | python - -y
+
+        # Update path
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: "poetry"
+
+    - name: Install dependencies
+      run: |
+        poetry install --without dev
+
+    - uses: iterative/setup-cml@v1
+
+    - name: Download Data
+      run: |
+        python -m pip install kaggle
+        export KAGGLE_USERNAME=${{ secrets.KAGGLE_USER }}
+        export KAGGLE_KEY=${{ secrets.KAGGLE_API_KEY }}
+        ./tasks/download_data.sh
+
+    - name: Train model
+      run: |
+        poetry run python train_holdout.py
+
+    - name: Write CML report
+      run: |
+        cat test_kpis.json >> report.md
+        cml comment create report.md
+      env:
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}

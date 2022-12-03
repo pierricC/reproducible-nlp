@@ -1,5 +1,7 @@
 """Script that train a classifier on the movie["review"] dataset."""
 
+import json
+
 import nltk
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -44,4 +46,6 @@ if __name__ == "__main__":
         params=cfg.PARAMS,
     )
 
-    print(test_kpis)
+    filepath = "test_kpis.json"
+    with open(filepath, "w") as f:
+        json.dump(test_kpis, f)
