@@ -10,14 +10,14 @@ DATA_ZIP="imbd-movie-reviews-for-binary-sentiment-analysis.zip"
 DATA_DIR="data"
 
 if test -e ${DATA_ZIP}; then
-    rm ${DATA_ZIP}
+    sudo rm ${DATA_ZIP}
 fi
 
 kaggle datasets download -d mwallerphunware/imbd-movie-reviews-for-binary-sentiment-analysis
 
 
 unzip -p ${DATA_ZIP} > ${DATA_NAME}
-rm ${DATA_ZIP}
+sudo rm ${DATA_ZIP}
 
 if [ -d ${DATA_DIR} ]; then
     echo "${DATA_DIR} already exists."
