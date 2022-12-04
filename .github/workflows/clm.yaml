@@ -48,7 +48,7 @@ jobs:
 
     - name: Write CML report
       run: |
-        cat test_kpis.json >> report.md
+        cat results/test_kpis.json >> report.md
         cml comment create report.md
       env:
         REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
