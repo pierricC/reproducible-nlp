@@ -2,45 +2,57 @@
 
 import json
 
+import hydra
 import nltk
 import pandas as pd
+from omegaconf import DictConfig
 from sklearn.model_selection import train_test_split
 
-from src.config import config as cfg
 from src.features.labelencoder import label_encoder
 from src.features.preprocessing import denoise_text, text_to_vector
 from src.features.sampler import sample_df
 from src.modeling.trainer import run_model_holdout
 from src.utils.io import ensure_directory
 
-if __name__ == "__main__":
 
+@hydra.main(version_base=None, config_path="src/conf", config_name="config")
+def main(cfg: DictConfig):
+    """Pipeline to train and save a model with holdout data."""
     # Read dataset
-    df = pd.read_csv(cfg.DATA_PATH)
+    df = pd.read_csv(cfg.path.dataset)
 
     # We only take a fraction of the data to speed up training time.
-    df = sample_df(df, fraction=cfg.FRACTION_SAMPLE, random_state=cfg.SEED)
+    df = sample_df(
+        df,
+        fraction=cfg.preprocess.fraction_sample,
+        random_state=cfg.preprocess.seed,
+    )
 
     # Label encode the target
     df = label_encoder(
-        df, column_to_encode=cfg.TARGET, positive_value=cfg.POSITIVE_VALUE
+        df,
+        column_to_encode=cfg.data.target,
+        positive_value=cfg.data.positive_value,
     )
 
     df = denoise_text(
         df,
-        column_to_denoise=cfg.TEXT_FEATURE,
-        patterns_to_apply=cfg.PATTERNS_TO_APPLY,
+        column_to_denoise=cfg.data.text_feature,
+        patterns_to_apply=cfg.regex.pattern_to_apply,
     )
 
-    X = df[cfg.TEXT_FEATURE]
+    X = df[cfg.data.text_feature]
     # Target
-    y = df[cfg.TARGET]
+    y = df[cfg.data.target]
 
     # Install the nlkt punkt package on the machine if not there already.
     nltk.download("punkt")
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=cfg.TEST_SIZE, random_state=cfg.SEED
+        X,
+        y,
+        test_size=cfg.preprocess.test_size,
+        random_state=cfg.preprocess.seed,
     )
 
     X_train, X_test = text_to_vector(X_train, X_test)
@@ -50,7 +62,7 @@ if __name__ == "__main__":
         X_test=X_test,
         y_train=y_train,
         y_test=y_test,
-        params=cfg.PARAMS,
+        params=cfg.params,
     )
 
     filepath = "results/test_kpis.json"
@@ -60,3 +72,7 @@ if __name__ == "__main__":
     ensure_directory(filepath)
     with open(filepath, "w") as f:
         json.dump(test_kpis, f)
+
+
+if __name__ == "__main__":
+    main()

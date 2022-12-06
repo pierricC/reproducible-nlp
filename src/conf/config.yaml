@@ -1,0 +1,22 @@
+path:
+  dataset: "data/imdb-dataset.csv"
+data:
+  target: "sentiment"
+  text_feature: "review"
+  positive_value: "Positive"
+preprocess:
+  nb_split: 5
+  fraction_sample: 0.1
+  test_size: 0.3
+  seed: 0
+params: {
+  penalty: "l2",
+}
+regex:
+  pattern_to_apply: {
+    re_bracked: 'r"\[[^]]*\]"',
+    re_htlm: 'r"<.*?>"',
+    re_punctuation: 'r"[^\w\s]"',
+    re_url: 'r"https://\S+|www\.\S+"',
+    re_spe_characters: 'r"[^a-zA-z0-9\s]"',
+  }
