@@ -5,9 +5,9 @@ import json
 import hydra
 import nltk
 import pandas as pd
-from omegaconf import DictConfig
 from sklearn.model_selection import train_test_split
 
+from src.conf.config import ImbdConfig
 from src.features.labelencoder import label_encoder
 from src.features.preprocessing import denoise_text, text_to_vector
 from src.features.sampler import sample_df
@@ -16,10 +16,10 @@ from src.utils.io import ensure_directory
 
 
 @hydra.main(version_base=None, config_path="src/conf", config_name="config")
-def main(cfg: DictConfig):
+def main(cfg: ImbdConfig):
     """Pipeline to train and save a model with holdout data."""
     # Read dataset
-    df = pd.read_csv(cfg.path.dataset)
+    df = pd.read_csv(cfg.paths.dataset)
 
     # We only take a fraction of the data to speed up training time.
     df = sample_df(
@@ -38,7 +38,7 @@ def main(cfg: DictConfig):
     df = denoise_text(
         df,
         column_to_denoise=cfg.data.text_feature,
-        patterns_to_apply=cfg.regex.pattern_to_apply,
+        patterns_to_apply=list(cfg.preprocess.regex_pattern_to_apply.values()),
     )
 
     X = df[cfg.data.text_feature]
@@ -62,7 +62,7 @@ def main(cfg: DictConfig):
         X_test=X_test,
         y_train=y_train,
         y_test=y_test,
-        params=cfg.params,
+        params=cfg.params.logistic_reg,
     )
 
     filepath = "results/test_kpis.json"

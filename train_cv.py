@@ -3,8 +3,8 @@
 import hydra
 import nltk
 import pandas as pd
-from omegaconf import DictConfig
 
+from src.conf.config import ImbdConfig
 from src.features.labelencoder import label_encoder
 from src.features.preprocessing import denoise_text
 from src.features.sampler import sample_df
@@ -12,10 +12,10 @@ from src.modeling.trainer import run_model_cv
 
 
 @hydra.main(version_base=None, config_path="src/conf", config_name="config")
-def main(cfg: DictConfig):
+def main(cfg: ImbdConfig):
     """Pipeline to evaluate model with cross-validation."""
     # Read dataset
-    df = pd.read_csv(cfg.path.dataset)
+    df = pd.read_csv(cfg.paths.dataset)
 
     # We only take a fraction of the data to speed up training time.
     df = sample_df(
@@ -34,7 +34,7 @@ def main(cfg: DictConfig):
     df = denoise_text(
         df,
         column_to_denoise=cfg.data.text_feature,
-        patterns_to_apply=cfg.regex.pattern_to_apply,
+        patterns_to_apply=list(cfg.preprocess.regex_pattern_to_apply.values()),
     )
 
     X = df[cfg.data.text_feature]
@@ -47,7 +47,7 @@ def main(cfg: DictConfig):
     train_kpis, valid_kpis = run_model_cv(
         X,
         y,
-        params=cfg.params,
+        params=cfg.params.logistic_reg,
         n_splits=cfg.preprocess.nb_split,
         random_state=cfg.preprocess.seed,
     )
