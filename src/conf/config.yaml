@@ -1,4 +1,4 @@
-path:
+paths:
   dataset: "data/imdb-dataset.csv"
 data:
   target: "sentiment"
@@ -9,14 +9,14 @@ preprocess:
   fraction_sample: 0.1
   test_size: 0.3
   seed: 0
-params: {
-  penalty: "l2",
-}
-regex:
-  pattern_to_apply: {
+  regex_pattern_to_apply: {
     re_bracked: 'r"\[[^]]*\]"',
     re_htlm: 'r"<.*?>"',
     re_punctuation: 'r"[^\w\s]"',
     re_url: 'r"https://\S+|www\.\S+"',
     re_spe_characters: 'r"[^a-zA-z0-9\s]"',
   }
+params:
+  logistic_reg: {
+    penalty: "l2"
+}
