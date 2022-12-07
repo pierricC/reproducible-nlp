@@ -1,7 +1,5 @@
 """Script that train a classifier on the movie["review"] dataset."""
 
-import json
-
 import hydra
 import nltk
 import pandas as pd
@@ -11,8 +9,9 @@ from src.conf.config import ImbdConfig
 from src.features.labelencoder import label_encoder
 from src.features.preprocessing import denoise_text, text_to_vector
 from src.features.sampler import sample_df
-from src.modeling.trainer import run_model_holdout
-from src.utils.io import ensure_directory
+from src.modeling.inference import evaluate
+from src.modeling.trainer import train_model_holdout
+from src.utils.io import save_to_json
 
 
 @hydra.main(version_base=None, config_path="src/conf", config_name="config")
@@ -57,21 +56,18 @@ def main(cfg: ImbdConfig):
 
     X_train, X_test = text_to_vector(X_train, X_test)
 
-    clf, test_kpis = run_model_holdout(
+    clf = train_model_holdout(
         X_train=X_train,
-        X_test=X_test,
         y_train=y_train,
-        y_test=y_test,
         params=cfg.params.logistic_reg,
     )
+
+    test_kpis = evaluate(clf, X_test, y_test)
 
     filepath = "results/test_kpis.json"
 
     print(test_kpis)
-
-    ensure_directory(filepath)
-    with open(filepath, "w") as f:
-        json.dump(test_kpis, f)
+    save_to_json(filepath=filepath, object_to_save=test_kpis)
 
 
 if __name__ == "__main__":

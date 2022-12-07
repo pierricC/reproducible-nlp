@@ -1,13 +1,15 @@
 """Functions for training and evaluating classifiers."""
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
 import pandas as pd
+import sklearn
 from sklearn import linear_model, model_selection
 from sklearn.metrics import accuracy_score, matthews_corrcoef, roc_auc_score
 from tqdm import tqdm
 
 from src.features.preprocessing import text_to_vector
+from src.modeling.inference import get_prediction_metrics_fold
 
 # Cross-validation using a simple logistic regression clf.
 
@@ -18,7 +20,7 @@ def run_model_cv(
     params: Dict[Any, Any],
     n_splits: int,
     random_state: int,
-) -> Tuple[Dict[str, float], Dict[str, float]]:
+) -> Dict[str, float]:
     """
     Stratified Cross-validation for simple classifier.
 
@@ -33,7 +35,6 @@ def run_model_cv(
     n_splits
         Number of splits for the cross-validation
     """
-    train_kpis = {}
     valid_kpis = {
         "valid_auc_mean": 0.0,
         "valid_mcc_mean": 0.0,
@@ -52,32 +53,23 @@ def run_model_cv(
         X_train, X_valid = text_to_vector(X_train, X_valid)
 
         # Model training
-        clf = linear_model.LogisticRegression(**params)
-        clf.fit(X_train, y_train)
+        clf = train_model_holdout(X_train, y_train, params=params)
 
         # Evaluate on fold
-        preds_train = clf.predict(X_train)
-        preds_valid = clf.predict(X_valid)
-
-        train_kpis[f"train_auc_fold_{i}"] = roc_auc_score(y_train, preds_train)
-        train_kpis[f"train_mcc_fold_{i}"] = matthews_corrcoef(
-            y_train, preds_train
-        )
-        train_kpis[f"train_acc_fold_{i}"] = accuracy_score(
-            y_valid, preds_valid
+        predictions_valid = clf.predict(X_valid)
+        valid_kpis = get_prediction_metrics_fold(
+            predictions_valid, y_valid, current_kpis=valid_kpis, iteration=i
         )
 
-        valid_kpis[f"valid_auc_fold_{i}"] = roc_auc_score(y_valid, preds_valid)
-        valid_kpis[f"valid_mcc_fold_{i}"] = matthews_corrcoef(
-            y_valid, preds_valid
+        valid_kpis["valid_auc_mean"] += roc_auc_score(
+            y_valid, predictions_valid
         )
-        valid_kpis[f"valid_acc_fold_{i}"] = accuracy_score(
-            y_valid, preds_valid
+        valid_kpis["valid_mcc_mean"] += matthews_corrcoef(
+            y_valid, predictions_valid
         )
-
-        valid_kpis["valid_auc_mean"] += roc_auc_score(y_valid, preds_valid)
-        valid_kpis["valid_mcc_mean"] += matthews_corrcoef(y_valid, preds_valid)
-        valid_kpis["valid_acc_mean"] += accuracy_score(y_valid, preds_valid)
+        valid_kpis["valid_acc_mean"] += accuracy_score(
+            y_valid, predictions_valid
+        )
 
         i += 1
 
@@ -85,16 +77,14 @@ def run_model_cv(
     valid_kpis["valid_mcc_mean"] /= n_splits
     valid_kpis["valid_acc_mean"] /= n_splits
 
-    return train_kpis, valid_kpis
+    return valid_kpis
 
 
-def run_model_holdout(
+def train_model_holdout(
     X_train: pd.DataFrame,
     y_train: pd.DataFrame,
-    X_test: pd.DataFrame,
-    y_test: pd.DataFrame,
     params: Dict[Any, Any],
-) -> Tuple[Dict[str, float], Dict[str, float]]:
+) -> sklearn.base.ClassifierMixin:
     """
     Holdout validation for simple classifier.
 
@@ -107,29 +97,15 @@ def run_model_holdout(
         Train dataset without labels
     y_train
         Train labels
-    X_test
-        Test dataset without labels
-    y_test
-        Test labels
     params
         Classifier parameters in a dict
     Returns
     -------
     clf
         Trained classifier
-    test_kpis
-        kpis that contains evaluation metrics of on the test dataset
     """
     # Model training
     clf = linear_model.LogisticRegression(**params)
     clf.fit(X_train, y_train)
 
-    # Evaluate on test
-    preds_test = clf.predict(X_test)
-
-    test_kpis = {}
-    test_kpis["test_auc"] = roc_auc_score(y_test, preds_test)
-    test_kpis["test_mcc"] = matthews_corrcoef(y_test, preds_test)
-    test_kpis["test_acc"] = accuracy_score(y_test, preds_test)
-
-    return clf, test_kpis
+    return clf

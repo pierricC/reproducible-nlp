@@ -44,15 +44,13 @@ def main(cfg: ImbdConfig):
     # Install the nlkt punkt package on the machine if not there already.
     nltk.download("punkt")
 
-    train_kpis, valid_kpis = run_model_cv(
+    valid_kpis = run_model_cv(
         X,
         y,
         params=cfg.params.logistic_reg,
         n_splits=cfg.preprocess.nb_split,
         random_state=cfg.preprocess.seed,
     )
-
-    print(train_kpis)
 
     print(valid_kpis)
 
