@@ -4,6 +4,7 @@ from typing import Dict, Union
 import numpy as np
 import pandas as pd
 import sklearn
+from numpy.typing import ArrayLike
 from sklearn.metrics import accuracy_score, matthews_corrcoef, roc_auc_score
 
 
@@ -31,8 +32,8 @@ def evaluate(
 
 
 def get_prediction_metrics(
-    predictions_test: Union[np.ndarray, pd.DataFrame],
-    y_test: Union[np.ndarray, pd.DataFrame],
+    predictions_test: ArrayLike,
+    y_test: ArrayLike,
 ) -> Dict[str, float]:
     """Get the metrics from a set of predictions and ground truth."""
     test_kpis = {}
