@@ -1,6 +1,8 @@
 """Script that train a classifier on the movie["review"] dataset."""
 
 import hydra
+import mlflow
+import mlflow.sklearn
 import nltk
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -18,6 +20,8 @@ from src.utils.io import save_to_json
 def main(cfg: ImbdConfig):
     """Pipeline to train and save a model with holdout data."""
     # Read dataset
+    mlflow.sklearn.autolog()
+
     df = pd.read_csv(cfg.paths.dataset)
 
     # We only take a fraction of the data to speed up training time.
@@ -56,18 +60,30 @@ def main(cfg: ImbdConfig):
 
     X_train, X_test = text_to_vector(X_train, X_test)
 
-    clf = train_model_holdout(
-        X_train=X_train,
-        y_train=y_train,
-        params=cfg.params.logistic_reg,
-    )
+    mlflow.set_tracking_uri(cfg.registry.uri)
 
-    test_kpis = evaluate(clf, X_test, y_test)
+    with mlflow.start_run():
+        clf = train_model_holdout(
+            X_train=X_train,
+            y_train=y_train,
+            params=cfg.params.logistic_reg,
+        )
 
-    filepath = "results/test_kpis.json"
+        test_kpis = evaluate(clf, X_test, y_test)
 
-    print(test_kpis)
-    save_to_json(filepath=filepath, object_to_save=test_kpis)
+        # Log config parameters and metrics
+        mlflow.log_params(cfg.params.logistic_reg)
+        mlflow.log_params(cfg.preprocess)
+        mlflow.log_metrics(test_kpis)
+
+        # Log the sklearn model
+        mlflow.sklearn.log_model(
+            sk_model=clf,
+            artifact_path="clf_sentiment",
+            registered_model_name="sentiment-sklearn-clf",
+        )
+        filepath = "results/test_kpis.json"
+        save_to_json(filepath=filepath, object_to_save=test_kpis)
 
 
 if __name__ == "__main__":

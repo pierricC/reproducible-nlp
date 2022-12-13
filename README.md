@@ -30,3 +30,19 @@ Once it's done, run this script to download the data under /data folder:
 ```bash
 ./tasks/download_data.sh
 ```
+
+
+# Model Registry
+
+In order to store and version ml models, it's common practise to use a Model Registry.
+To make things simpler, we will store the model and the metadata inside a sqlite DB locally.
+We can then access the UI on localhost.
+
+Fortunately, it's very easy to configure it by running:
+
+```bash
+mlflow server \
+     --backend-store-uri sqlite:///mlflow.db \
+     --default-artifact-root ./artifacts \
+     --host 0.0.0.0
+```

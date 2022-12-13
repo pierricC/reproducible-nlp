@@ -39,6 +39,13 @@ class Params:
 
 
 @dataclass
+class ModelRegistry:
+    """Class related to model registry settings."""
+
+    uri: str
+
+
+@dataclass
 class ImbdConfig:
     """Global class config to work with the Imbd dataset."""
 
@@ -46,3 +53,4 @@ class ImbdConfig:
     data: Data
     preprocess: Preprocess
     params: Params
+    registry: ModelRegistry
