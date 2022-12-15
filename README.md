@@ -41,8 +41,7 @@ We can then access the UI on localhost.
 Fortunately, it's very easy to configure it by running:
 
 ```bash
-mlflow server \
-     --backend-store-uri sqlite:///mlflow.db \
-     --default-artifact-root ./artifacts \
-     --host 0.0.0.0
+mlflow ui --backend-store-uri sqlite:///mlruns.db --host 0.0.0.0 --port 5000
 ```
+
+The database has to match the one defined in the `src/conf/config.yaml` configuration file.
