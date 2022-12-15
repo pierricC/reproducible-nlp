@@ -53,4 +53,4 @@ class ImbdConfig:
     data: Data
     preprocess: Preprocess
     params: Params
-    registry: ModelRegistry
+    ml_registry: ModelRegistry

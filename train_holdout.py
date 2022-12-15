@@ -20,8 +20,6 @@ from src.utils.io import save_to_json
 def main(cfg: ImbdConfig):
     """Pipeline to train and save a model with holdout data."""
     # Read dataset
-    mlflow.sklearn.autolog()
-
     df = pd.read_csv(cfg.paths.dataset)
 
     # We only take a fraction of the data to speed up training time.
@@ -60,7 +58,7 @@ def main(cfg: ImbdConfig):
 
     X_train, X_test = text_to_vector(X_train, X_test)
 
-    mlflow.set_tracking_uri(cfg.registry.uri)
+    mlflow.set_tracking_uri(cfg.ml_registry.uri)
 
     with mlflow.start_run():
         clf = train_model_holdout(

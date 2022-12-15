@@ -20,5 +20,5 @@ params:
   logistic_reg: {
     penalty: "l2"
 }
-model_registry:
-  uri: "http://localhost:5000"
+ml_registry:
+  uri: "sqlite:///mlruns.db"
