@@ -8,7 +8,11 @@ from typing import Any, Dict
 class Paths:
     """Class to manage data paths."""
 
-    dataset: str
+    raw_dataset: str
+    cleaned_train_dataset: str
+    cleaned_test_dataset: str
+    cleaned_train_labels: str
+    cleaned_test_labels: str
 
 
 @dataclass
@@ -42,7 +46,7 @@ class Params:
 class ModelRegistry:
     """Class related to model registry settings."""
 
-    uri: str
+    tracking_uri: str
 
 
 @dataclass

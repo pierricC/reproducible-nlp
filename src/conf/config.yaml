@@ -1,5 +1,9 @@
 paths:
-  dataset: "data/imdb-dataset.csv"
+  raw_dataset: "data/raw/imdb-dataset.csv"
+  cleaned_train_dataset: "data/cleaned/X_train.csv"
+  cleaned_test_dataset: "data/cleaned/X_test.csv"
+  cleaned_train_labels: "data/cleaned/y_train.csv"
+  cleaned_test_labels: "data/cleaned/y_test.csv"
 data:
   target: "sentiment"
   text_feature: "review"
@@ -21,4 +25,4 @@ params:
     penalty: "l2"
 }
 ml_registry:
-  uri: "sqlite:///mlruns.db"
+  tracking_uri: "sqlite:///mlruns.db"
